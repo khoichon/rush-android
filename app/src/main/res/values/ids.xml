@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="death_none" type="id" />
+    <item name="death_home" type="id" />
+    <item name="death_lock" type="id" />
+</resources>
