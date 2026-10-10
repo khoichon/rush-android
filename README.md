@@ -43,7 +43,7 @@ Doors wiki files:
 | `hide_enter` / `hide_exit` | `LLocer` / `LLocer2` |
 
 Sprites: `rush_moving` (animated, 45 frames at 20 ms), `rush_face` (jumpscare, mouth closed),
-`rush_scream` (jumpscare, mouth open), `hiding` (button icon).
+`rush_scream` (jumpscare, mouth open); both made fully opaque (no semi-transparent pixels) for the jumpscare, `hiding` (button icon).
 
 ## Building
 
