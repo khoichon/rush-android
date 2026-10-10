@@ -18,14 +18,13 @@ import kotlin.random.Random
 /** Jumpscare timeline, in ms from the moment Rush catches you. */
 object Js {
     const val FACE_MS = 1000L      // closed-mouth face, still, on black with static
-    const val CREEP_MS = 1400L     // it moves closer
-    const val WAIT_MS = 700L       // ...and waits
-    const val SCREAM_AT = FACE_MS + CREEP_MS + WAIT_MS   // open mouth + scream + glitch rush
+    const val WAIT_MS = 700L       // ...it steps in one small notch, then waits
+    const val SCREAM_AT = FACE_MS + WAIT_MS   // open mouth + scream + glitch rush
     const val STEPS = 9            // the rush at you is in jerky steps, not a smooth zoom
     const val STEP_MS = 42L
     const val HIT_AT = SCREAM_AT + STEPS * STEP_MS       // it reaches you
     const val END_AT = HIT_AT + 300L                     // death consequences fire here
-    const val CREEP_SCALE = 1.55f
+    const val CREEP_SCALE = 1.2f   // the one small step closer
     const val FINAL_SCALE = 7f
 }
 
@@ -167,12 +166,8 @@ class SceneView(context: Context, private val st: RushState) : View(context) {
         if (t < Js.SCREAM_AT) {
             drawStatic(c, w, h)
             val f = face ?: return
-            val s = when {
-                t < Js.FACE_MS -> 1f
-                t < Js.FACE_MS + Js.CREEP_MS ->
-                    1f + (Js.CREEP_SCALE - 1f) * smooth((t - Js.FACE_MS).toFloat() / Js.CREEP_MS)
-                else -> Js.CREEP_SCALE
-            }
+            // one small step closer in a single tick (not a smooth zoom), then it waits
+            val s = if (t < Js.FACE_MS) 1f else Js.CREEP_SCALE
             val jx = (rnd.nextFloat() - 0.5f) * 3f * density
             val jy = (rnd.nextFloat() - 0.5f) * 3f * density
             place(f, w / 2f + jx, h / 2f + jy, base * s)

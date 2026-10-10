@@ -16,8 +16,8 @@ overlay windows (`TYPE_APPLICATION_OVERLAY`), a Quick Settings tile and a small 
 3. **Pass**: Rush's smoke cloud crosses the screen. When he is at the middle, the game checks whether
    you are hiding.
 4. **Safe**: the door sound plays, the lights come back and you step out.
-5. **Caught** (jumpscare): black screen, static; the closed-mouth face shows for ~1 s, creeps closer, waits
-   0.7 s; then the open-mouth frame and the scream, rushing at you in jerky steps with colour-bleed glitching;
+5. **Caught** (jumpscare): black screen, static; the closed-mouth face shows for ~1 s, steps one small notch
+   closer in a single tick, waits 0.7 s; then the open-mouth frame and the scream, rushing at you in jerky steps with colour-bleed glitching;
    then the death consequence (opt-in).
 
 *Fake-outs*: a configurable share of automatic encounters flicker and play a short burst of sound, then nothing.
