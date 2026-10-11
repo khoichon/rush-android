@@ -42,6 +42,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var adminStatus: TextView
     private lateinit var adminButton: Button
     private lateinit var deathGroup: RadioGroup
+    private lateinit var guidingRadio: RadioButton
 
     private val notifPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { refresh() }
@@ -87,6 +88,15 @@ class MainActivity : ComponentActivity() {
         val admin = adminActive()
         adminStatus.text = if (admin) "Screen-lock permission: granted" else "Screen-lock permission: not granted"
         adminButton.text = if (admin) "Remove screen-lock permission" else "Grant screen-lock permission"
+        val guiding = GuidingLight.isInstalled(this)
+        guidingRadio.isEnabled = guiding
+        guidingRadio.alpha = if (guiding) 1f else 0.4f
+        guidingRadio.text = if (guiding) "Show the Guiding Light death screen"
+        else "Show the Guiding Light death screen (install the Guiding Light app first)"
+        if (!guiding && cfg.deathAction == DeathAction.GUIDING_LIGHT) {
+            cfg.deathAction = DeathAction.NONE // the helper app is gone
+            deathGroup.check(R.id.death_none)
+        }
         if (!admin && cfg.deathAction == DeathAction.LOCK) {
             cfg.deathAction = DeathAction.NONE // can't lock without the permission
             deathGroup.check(R.id.death_none)
@@ -138,6 +148,13 @@ class MainActivity : ComponentActivity() {
     private fun onDeathChoice(choice: DeathAction, previous: DeathAction) {
         when (choice) {
             DeathAction.NONE -> cfg.deathAction = choice
+            DeathAction.GUIDING_LIGHT -> {
+                if (GuidingLight.isInstalled(this)) {
+                    cfg.deathAction = choice
+                } else {
+                    deathGroup.check(idFor(previous))
+                }
+            }
             DeathAction.HOME -> confirm(
                 "Go to the home screen when Rush catches you?",
                 onYes = { cfg.deathAction = choice },
@@ -175,6 +192,7 @@ class MainActivity : ComponentActivity() {
         DeathAction.NONE -> R.id.death_none
         DeathAction.HOME -> R.id.death_home
         DeathAction.LOCK -> R.id.death_lock
+        DeathAction.GUIDING_LIGHT -> R.id.death_guiding
     }
 
     // ---------------------------------------------------------------- UI building
@@ -239,11 +257,14 @@ class MainActivity : ComponentActivity() {
         deathGroup.addView(radio(R.id.death_none, "Nothing"))
         deathGroup.addView(radio(R.id.death_home, "Go to the home screen"))
         deathGroup.addView(radio(R.id.death_lock, "Lock the screen"))
+        guidingRadio = radio(R.id.death_guiding, "Show the Guiding Light death screen")
+        deathGroup.addView(guidingRadio)
         deathGroup.check(idFor(cfg.deathAction))
         deathGroup.setOnCheckedChangeListener { _, checkedId ->
             val choice = when (checkedId) {
                 R.id.death_home -> DeathAction.HOME
                 R.id.death_lock -> DeathAction.LOCK
+                R.id.death_guiding -> DeathAction.GUIDING_LIGHT
                 else -> DeathAction.NONE
             }
             if (choice != cfg.deathAction) {

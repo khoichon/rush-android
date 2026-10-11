@@ -74,8 +74,8 @@ class OverlayController(private val context: Context, val state: RushState) {
     }
 
     fun showScene(m: SceneMode) {
+        if (sceneShown) { setSceneMode(m); return } // must not touch `mode` first: setSceneMode compares it
         mode = m
-        if (sceneShown) { setSceneMode(m); return }
         runCatching {
             wm.addView(scene, sceneParams(m))
             sceneShown = true

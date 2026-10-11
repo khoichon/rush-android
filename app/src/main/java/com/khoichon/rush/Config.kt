@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 
 /** What happens after Rush catches you (opt-in; skipped entirely in test mode). */
-enum class DeathAction { NONE, HOME, LOCK }
+enum class DeathAction { NONE, HOME, LOCK, GUIDING_LIGHT }
 
 /** Settings. Values are clamped on read, so a bad number can never reach the game. */
 class Config(context: Context) {

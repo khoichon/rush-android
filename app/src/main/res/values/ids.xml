@@ -3,4 +3,5 @@
     <item name="death_none" type="id" />
     <item name="death_home" type="id" />
     <item name="death_lock" type="id" />
+    <item name="death_guiding" type="id" />
 </resources>

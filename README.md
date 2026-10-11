@@ -25,7 +25,7 @@ overlay windows (`TYPE_APPLICATION_OVERLAY`), a Quick Settings tile and a small 
 ## Settings
 
 Spawn automatically, min/max delay, speed (how fast Rush crosses), fake-out chance, vibration, start on boot,
-what happens when he catches you (nothing / go home / lock the screen, all opt-in), and a test mode that skips
+what happens when he catches you (nothing / go home / lock the screen / show the Guiding Light death screen, all opt-in; the last one is greyed out unless the Guiding Light app is installed), and a test mode that skips
 the consequence and shows a "Test the jumpscare" button. The notification's **Stop** button always works.
 
 ## Assets

@@ -9,6 +9,13 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!-- lets us see whether the optional Guiding Light helper app is installed -->
+    <queries>
+        <intent>
+            <action android:name="dev.khoichon.guidinglight.action.SHOW" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"

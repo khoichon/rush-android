@@ -132,6 +132,10 @@ class RushService : Service() {
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
             }
+            DeathAction.GUIDING_LIGHT -> runCatching {
+                // allowed from the background because we hold "display over other apps"
+                if (GuidingLight.isInstalled(this)) startActivity(GuidingLight.intent())
+            }
             DeathAction.LOCK -> runCatching {
                 val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
                 if (dpm.isAdminActive(ComponentName(this, RushAdmin::class.java))) dpm.lockNow()
