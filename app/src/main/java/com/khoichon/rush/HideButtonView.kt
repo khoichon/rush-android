@@ -43,15 +43,29 @@ class HideButtonView(context: Context, private val st: RushState) : View(context
         val cy = height / 2f
         val r = min(width, height) / 2f - 3f * density
         val hiding = st.hidden
-        fill.color = if (hiding) 0xE6000000.toInt() else 0xB0101018.toInt()
+        val locked = android.os.SystemClock.uptimeMillis() < st.hideLockUntil
+        fill.color = when {
+            locked -> 0x66FF2020.toInt()        // Hide locked the closet
+            hiding -> 0xE6000000.toInt()
+            else -> 0xB0101018.toInt()
+        }
         c.drawCircle(cx, cy, r, fill)
-        ring.color = if (hiding) 0xFFFFFFFF.toInt() else 0x88FFFFFF.toInt()
+        ring.color = when {
+            locked -> 0xFFFF4040.toInt()
+            hiding -> 0xFFFFFFFF.toInt()
+            else -> 0x88FFFFFF.toInt()
+        }
         c.drawCircle(cx, cy, r, ring)
         icon?.let {
-            iconP.alpha = if (hiding) 255 else 190
+            iconP.alpha = when {
+                locked -> 90
+                hiding -> 255
+                else -> 190
+            }
             val s = r * 1.15f
             dst.set(cx - s / 2f, cy - s / 2f, cx + s / 2f, cy + s / 2f)
             c.drawBitmap(it, null, dst, iconP)
         }
+        if (locked) postInvalidateOnAnimation() // keep refreshing until the lock expires
     }
 }

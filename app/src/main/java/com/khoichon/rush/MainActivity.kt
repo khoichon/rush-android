@@ -39,6 +39,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var toggleButton: Button
     private lateinit var callButton: Button
     private lateinit var jumpscareButton: Button
+    private lateinit var summonBox: LinearLayout
+    private lateinit var statsView: TextView
     private lateinit var adminStatus: TextView
     private lateinit var adminButton: Button
     private lateinit var deathGroup: RadioGroup
@@ -85,14 +87,16 @@ class MainActivity : ComponentActivity() {
         toggleButton.isEnabled = running || overlay
         callButton.isEnabled = running
         jumpscareButton.visibility = if (cfg.testMode && running) View.VISIBLE else View.GONE
+        summonBox.visibility = if (running) View.VISIBLE else View.GONE // not tied to test mode: consequences still are
+        statsView.text = statsText()
         val admin = adminActive()
         adminStatus.text = if (admin) "Screen-lock permission: granted" else "Screen-lock permission: not granted"
         adminButton.text = if (admin) "Remove screen-lock permission" else "Grant screen-lock permission"
         val guiding = GuidingLight.isInstalled(this)
         guidingRadio.isEnabled = guiding
         guidingRadio.alpha = if (guiding) 1f else 0.4f
-        guidingRadio.text = if (guiding) "Show the Guiding Light death screen"
-        else "Show the Guiding Light death screen (install the Guiding Light app first)"
+        guidingRadio.text = if (guiding) "Show the death screen (Guiding / Curious Light)"
+        else "Show the death screen (install the Guiding Light app first)"
         if (!guiding && cfg.deathAction == DeathAction.GUIDING_LIGHT) {
             cfg.deathAction = DeathAction.NONE // the helper app is gone
             deathGroup.check(R.id.death_none)
@@ -188,6 +192,25 @@ class MainActivity : ComponentActivity() {
             .show()
     }
 
+    /** One line per entity: how often it showed up and how often it got you. */
+    private fun statsText(): String = Entity.ALL.joinToString("\n") { e ->
+        "${e.label}: encountered ${cfg.encounters(e)}x, died ${cfg.deaths(e)}x"
+    }
+
+    /** Everything back to the defaults: settings, weights, encounter and death counters — then rebuild the UI. */
+    private fun resetAll() {
+        confirm(
+            "Reset every setting to its default? This also forgets the encounter and death counters.",
+            onYes = {
+                cfg.reset()
+                notifyService()
+                setContentView(buildUi()) // the old rows still hold the old values
+                refresh()
+            },
+            onNo = {}
+        )
+    }
+
     private fun idFor(a: DeathAction) = when (a) {
         DeathAction.NONE -> R.id.death_none
         DeathAction.HOME -> R.id.death_home
@@ -204,10 +227,11 @@ class MainActivity : ComponentActivity() {
         }
 
         col.addView(text("RUSH", 34f, bold = true, color = 0xFFFFFFFF.toInt()))
-        col.addView(text("A fan-made tribute to Rush from Doors. Android edition: Rush comes through your screen, over whatever app you are in.", 13f, margin = 4))
+        col.addView(text("A fan-made tribute to Rush from Doors. Android edition: Rush — and his variants — come through your screen, over whatever app you are in.", 13f, margin = 4))
         col.addView(text(
-            "When the lights flicker, Rush is coming. Tap the round button at the bottom to hide in the closet " +
-                "before he passes. If you are not hiding when he reaches you, he catches you. " +
+            "When the lights flicker (or the screen shakes, or a roar builds, or lightning strikes), something is coming. " +
+                "Tap the round button at the bottom to hide in the closet before it passes. If you are not hiding when it " +
+                "reaches you, it catches you — and hide too long and Hide will throw you out. " +
                 "The notification's Stop button always gets you out.",
             12f, margin = 8, color = 0xCCFFFFFF.toInt()
         ))
@@ -227,7 +251,7 @@ class MainActivity : ComponentActivity() {
         col.addView(header("Control"))
         toggleButton = button("Start RUSH") { toggleService() }
         col.addView(toggleButton)
-        callButton = button("Call Rush now") {
+        callButton = button("Summon an entity now") {
             startService(Intent(this, RushService::class.java).setAction(RushService.ACTION_SPAWN))
         }
         col.addView(callButton)
@@ -247,6 +271,27 @@ class MainActivity : ComponentActivity() {
         col.addView(switchRow("Vibration", cfg.haptics) { cfg.haptics = it })
         col.addView(switchRow("Start RUSH when the phone boots", cfg.startOnBoot) { cfg.startOnBoot = it })
 
+        // ---- entities ----
+        col.addView(header("Entities"))
+        col.addView(text(
+            "How likely each one is to show up when something spawns (0-100; 0 = never). " +
+                "Rush is the common one; the rest get rarer as they get meaner. Rush and Ambush bring Hide: " +
+                "stay in the closet too long and it throws you out.",
+            11f, margin = 4, color = 0xAAFFFFFF.toInt()
+        ))
+        for (e in Entity.ALL) {
+            col.addView(numberRow("${e.label} weight", cfg.weight(e).toString(), decimal = false) { v ->
+                cfg.setWeight(e, v.toInt())
+            })
+        }
+        col.addView(switchRow("Hide punishes hiding too long", cfg.hideEnabled) { cfg.hideEnabled = it })
+
+        // ---- how it has gone so far ----
+        col.addView(header("Encounters"))
+        statsView = text(statsText(), 13f, margin = 4)
+        col.addView(statsView)
+        col.addView(button("Reset all settings to defaults") { resetAll() })
+
         // ---- when it catches you ----
         col.addView(header("When Rush catches you"))
         col.addView(text("Off by default. Skipped entirely in test mode.", 11f, color = 0xAAFFFFFF.toInt()))
@@ -257,7 +302,7 @@ class MainActivity : ComponentActivity() {
         deathGroup.addView(radio(R.id.death_none, "Nothing"))
         deathGroup.addView(radio(R.id.death_home, "Go to the home screen"))
         deathGroup.addView(radio(R.id.death_lock, "Lock the screen"))
-        guidingRadio = radio(R.id.death_guiding, "Show the Guiding Light death screen")
+        guidingRadio = radio(R.id.death_guiding, "Show the death screen (Guiding / Curious Light)")
         deathGroup.addView(guidingRadio)
         deathGroup.check(idFor(cfg.deathAction))
         deathGroup.setOnCheckedChangeListener { _, checkedId ->
@@ -282,6 +327,18 @@ class MainActivity : ComponentActivity() {
         // ---- test mode ----
         col.addView(header("Testing"))
         col.addView(switchRow("Test mode (skip consequences)", cfg.testMode) { cfg.testMode = it; refresh() })
+        summonBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        summonBox.addView(text("Summon a specific entity (death consequences still apply unless Test mode is on):", 12f, margin = 8, color = 0xCCFFFFFF.toInt()))
+        for (e in Entity.ALL) {
+            summonBox.addView(button("Summon ${e.label}") {
+                startService(
+                    Intent(this, RushService::class.java)
+                        .setAction(RushService.ACTION_SPAWN)
+                        .putExtra(RushService.EXTRA_ENTITY, e.key)
+                )
+            })
+        }
+        col.addView(summonBox)
 
         col.addView(text(
             "Doors and Rush belong to LSPLASH. Unofficial, non-commercial fan project; sprites and sounds " +
